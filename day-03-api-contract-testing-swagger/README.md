@@ -66,3 +66,104 @@ Day 3 belum membahas:
 - Docker.
 - Deployment.
 - Advanced OpenAPI customization.
+
+-------------------------------------------------------------
+
+## API Contract
+
+### POST /api/v1/customers
+- Method: POST
+- URL: /api/v1/customers
+- Description: Create a new customer.
+- Request body: 
+``` json
+{
+"full_name": "edith",
+"email": "edith@mail.com",
+"phone_number": "082233445566"
+}
+```
+- Success response: New customer created.
+``` json
+{
+    "email": "edith@mail.com",
+    "full_name": "edith",
+    "id": 1,
+    "phone_number": "082233445566"
+}
+``` json
+- Error response: Invalid user input.
+``` json
+{
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid request",
+    "errors": [
+        {
+            "field": "fullName",
+            "message": "size must be between 3 and 100"
+        }
+    ]
+}
+```
+- Status code: 201 Created
+
+### GET /api/v1/customers
+- Method: GET
+- URL: /api/v1/customers
+- Description: Get all customers.
+- Request body: -
+- Success response: All customers retrieved successfully.
+``` json
+{
+    "email": "edith@mail.com",
+    "full_name": "edith",
+    "id": 1,
+    "phone_number": "082233445566"
+}
+```
+- Error response: -
+- Status code: 200 OK
+
+### GET /api/v1/customers/{id}
+- Method: GET
+- URL: /api/v1/customers/{id}
+- Description: Get customer data by id.
+- Request body: -
+- Success response: Customer data retrieved successfully.
+```json
+{
+    "email": "edith@mail.com",
+    "full_name": "edith",
+    "id": 1,
+    "phone_number": "082233445566"
+}
+```
+- Error response: Customer not found.
+```json
+{
+    "code": "CUSTOMER_NOT_FOUND",
+    "message": "Customer not found with id: 2",
+    "errors": null
+}
+```
+- Status code: 200 OK
+
+### DELETE /api/v1/customers/{id}
+- Method: DELETE
+- URL: /api/v1/customers/{id}
+- Description: Get customer data by id.
+- Request body: -
+- Success response: Customer data deleted successfully.
+- Error response: Customer not found.
+- Status code: 200 OK
+
+### PUT /api/v1/customers/{id}
+- Method: PUT
+- URL: /api/v1/customers/{id}
+- Description: Updates all fields in customer data based on id.
+- Request body: -
+- Success response: All fields in customer data updated successfully.
+- Error response: Customer not found.
+- Status code: 200 OK
+
+`PATCH /api/v1/customers/{id}`
