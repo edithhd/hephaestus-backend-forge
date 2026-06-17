@@ -1,0 +1,12 @@
+com\example\training\dto\UpdateCustomerRequest.class
+com\example\training\service\CustomerService.class
+com\example\training\controller\CustomerController.class
+com\example\training\exception\GlobalExceptionHandler.class
+com\example\training\dto\CustomerResponse.class
+com\example\training\dto\PatchCustomerRequest.class
+com\example\training\TrainingApplication.class
+com\example\training\dto\ErrorResponse.class
+com\example\training\exception\CustomerNotFoundException.class
+com\example\training\dto\CreateCustomerRequest.class
+com\example\training\model\Customer.class
+com\example\training\dto\FieldErrorResponse.class
