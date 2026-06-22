@@ -23,6 +23,9 @@ public class RepaymentScheduleResponse {
     @JsonProperty("id")
     private Long id;
 
+    @JsonProperty("loan_application_id")
+    private Long loanApplicationId;
+
     @JsonProperty("installment_number")
     private int installmentNumber;
 

@@ -116,11 +116,11 @@ public class LoanApplicationController {
     @ApiResponse(responseCode = "200", description = "Loan application data retrieved successfully.")
     @ApiResponse(responseCode = "404", description = "Loan application not found.")
     @ApiResponse(responseCode = "500", description = "Internal server error.")
-    public ResponseEntity<List<RepaymentScheduleResponse>> getRepaymentByLoanId(@PathVariable Long loanApplicationId, HttpServletRequest requestContext) {
+    public ResponseEntity<List<RepaymentScheduleResponse>> getRepaymentByLoanId(@PathVariable Long id, HttpServletRequest requestContext) {
         ValidateTokenRoleHelper tokenHelper = new ValidateTokenRoleHelper();
         tokenHelper.validateTokenRole(requestContext, authService.getUsers(), Role.ADMIN, Role.STAFF, Role.APPROVER);
         
-        return ResponseEntity.ok(loanApplicationService.getRepaymentByLoanId(loanApplicationId));
+        return ResponseEntity.ok(loanApplicationService.getRepaymentByLoanId(id));
     }
 
 }

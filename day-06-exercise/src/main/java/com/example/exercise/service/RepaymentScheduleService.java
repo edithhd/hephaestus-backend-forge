@@ -61,11 +61,14 @@ public class RepaymentScheduleService {
         // formula principal amount
         BigDecimal monthlyPrincipal = loanAmount.divide(BigDecimal.valueOf(tenor), 2, RoundingMode.HALF_UP);
 
-        // formula interest amount
+        // formula interest rate
         BigDecimal monthlyInterestRate = BigDecimal.valueOf(annualInterestRate).divide(BigDecimal.valueOf(12), 2, RoundingMode.HALF_UP);
 
+        // formula interest amount
+        BigDecimal monthlyInterest = monthlyInterestRate.multiply(monthlyPrincipal);
+
         // formula total amount
-        BigDecimal monthlyTotalAmount = monthlyPrincipal.add(monthlyInterestRate);
+        BigDecimal monthlyTotalAmount = monthlyPrincipal.add(monthlyInterest);
 
         // formula due date
         ZonedDateTime nextDueDate = ZonedDateTime.now().plusMonths(1);
@@ -95,7 +98,7 @@ public class RepaymentScheduleService {
             throw new LoanApplicationNotFoundException(loanApplicationId);
         }
 
-        Optional<RepaymentScheduleEntity> repaymentSchedule = repaymentScheduleRepository.findByIdWithLoanApplication(loanApplicationId);
+        List<RepaymentScheduleEntity> repaymentSchedule = repaymentScheduleRepository.findByLoanApplicationId(loanApplicationId);
         return repaymentSchedule
                 .stream()
                 .map(this::toScheduleResponse)
@@ -106,6 +109,7 @@ public class RepaymentScheduleService {
         RepaymentScheduleResponse response = new RepaymentScheduleResponse();
 
         response.setId(repaymentSchedule.getId());
+        response.setLoanApplicationId(repaymentSchedule.getLoanApplication().getId());
         response.setInstallmentNumber(repaymentSchedule.getInstallmentNumber());
         response.setDueDate(repaymentSchedule.getDueDate());
         response.setPrincipalAmount(repaymentSchedule.getPrincipalAmount());

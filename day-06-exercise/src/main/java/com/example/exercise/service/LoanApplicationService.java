@@ -124,7 +124,7 @@ public class LoanApplicationService {
         return toResponse(loanApplicationRepository.save(loan));
     }
 
-    // SEARCH BY LOAN ID
+    // SEARCH REPAYMENT BY LOAN ID
     // GET /api/v1/loan-applications/{loan_application_id}/repayment-schedules
     @Transactional(readOnly = true)
     public List<RepaymentScheduleResponse> getRepaymentByLoanId(Long loanApplicationId){
