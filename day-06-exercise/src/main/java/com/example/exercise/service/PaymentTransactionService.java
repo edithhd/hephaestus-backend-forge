@@ -4,6 +4,9 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +24,7 @@ public class PaymentTransactionService {
 
     private final PaymentTransactionRepository paymentTransactionRepository;
     private final RepaymentScheduleRepository repaymentScheduleRepository;
+    private static final Logger log = LoggerFactory.getLogger(LoanApplicationService.class);
 
     public PaymentTransactionService(PaymentTransactionRepository paymentTransactionRepository, RepaymentScheduleRepository repaymentScheduleRepository) {
         this.paymentTransactionRepository = paymentTransactionRepository;
@@ -47,6 +51,9 @@ public class PaymentTransactionService {
 
         repaymentSchedule.setStatus(ScheduleStatus.PAID);
         repaymentScheduleRepository.save(repaymentSchedule);
+
+        log.info( "event=payment_transaction_created, paymentTransaction={}",
+        savedPaymentTransaction.getId());
 
         return toResponse(savedPaymentTransaction);
     }

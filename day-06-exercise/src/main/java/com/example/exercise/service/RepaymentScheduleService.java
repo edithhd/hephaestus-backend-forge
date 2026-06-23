@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,7 @@ public class RepaymentScheduleService {
     private final LoanApplicationRepository loanApplicationRepository;
     private final RepaymentScheduleRepository repaymentScheduleRepository;
     private final PaymentTransactionRepository paymentTransactionRepository;
+    private static final Logger log = LoggerFactory.getLogger(LoanApplicationService.class);
 
     @Value("${loan.interest.annual-rate:0.12}")
     private double annualInterestRate;
@@ -86,6 +89,8 @@ public class RepaymentScheduleService {
             repaymentScheduleEntity.setUpdatedAt(ZonedDateTime.now());
 
             repaymentScheduleRepository.save(repaymentScheduleEntity);
+            log.info("event=repayment_schedule_created, repaymentScheduleId={}",
+                repaymentScheduleEntity.getId());
             nextDueDate = nextDueDate.plusMonths(1);
         }
         

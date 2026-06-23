@@ -107,94 +107,94 @@ public class CustomerService {
                 .toList();
     }
 
-    @Transactional
-    public CustomerResponse deleteCustomerById(Long id) {
+    // @Transactional
+    // public CustomerResponse deleteCustomerById(Long id) {
 
-        CustomerEntity customer = customerRepository.findById(id)
-                .orElseThrow(() -> new CustomerNotFoundException());
-                log.warn("event=validation_error, field_error=email, error=duplicate");
-        customerRepository.delete(customer);
+    //     CustomerEntity customer = customerRepository.findById(id)
+    //             .orElseThrow(() -> new CustomerNotFoundException());
+    //             log.warn("event=validation_error, field_error=email, error=duplicate");
+    //     customerRepository.delete(customer);
 
-        log.info( "Customer deleted. customerId={}, fullName={}, email={}, phoneNumber={}",
-        customer.getId(),
-        customer.getFullName(),
-        customer.getEmail(),
-        customer.getPhoneNumber());
+    //     log.info( "Customer deleted. customerId={}, fullName={}, email={}, phoneNumber={}",
+    //     customer.getId(),
+    //     customer.getFullName(),
+    //     customer.getEmail(),
+    //     customer.getPhoneNumber());
 
-        return toResponse(customer);
-    }
+    //     return toResponse(customer);
+    // }
 
-    @Transactional
-    public CustomerResponse updateCustomerById(
-            Long id,
-            UpdateCustomerRequest request) {
+    // @Transactional
+    // public CustomerResponse updateCustomerById(
+    //         Long id,
+    //         UpdateCustomerRequest request) {
 
-        CustomerEntity customer = customerRepository.findById(id)
-                .orElseThrow(() -> new CustomerNotFoundException());
+    //     CustomerEntity customer = customerRepository.findById(id)
+    //             .orElseThrow(() -> new CustomerNotFoundException());
 
-        if (!customer.getEmail().equals(request.getEmail())
-                && customerRepository.existsByEmail(request.getEmail())) {
-            throw new DuplicateException("Email already exists");
-        }
+    //     if (!customer.getEmail().equals(request.getEmail())
+    //             && customerRepository.existsByEmail(request.getEmail())) {
+    //         throw new DuplicateException("Email already exists");
+    //     }
 
-        if (!customer.getNik().equals(request.getNik())
-                && customerRepository.existsByNik(request.getNik())) {
-            throw new DuplicateException("NIK already exists");
-        }
+    //     if (!customer.getNik().equals(request.getNik())
+    //             && customerRepository.existsByNik(request.getNik())) {
+    //         throw new DuplicateException("NIK already exists");
+    //     }
 
-        customer.setNik(request.getNik());
-        customer.setFullName(request.getFullName());
-        customer.setEmail(request.getEmail());
-        customer.setPhoneNumber(request.getPhoneNumber());
+    //     customer.setNik(request.getNik());
+    //     customer.setFullName(request.getFullName());
+    //     customer.setEmail(request.getEmail());
+    //     customer.setPhoneNumber(request.getPhoneNumber());
 
-        CustomerEntity updatedCustomer = customerRepository.save(customer);
+    //     CustomerEntity updatedCustomer = customerRepository.save(customer);
 
-        log.info( "Customer deleted. customerId={}, fullName={}",
-        customer.getId(),
-        customer.getFullName());
+    //     log.info( "Customer deleted. customerId={}, fullName={}",
+    //     customer.getId(),
+    //     customer.getFullName());
 
-        return toResponse(updatedCustomer);
-    }
+    //     return toResponse(updatedCustomer);
+    // }
 
-    @Transactional
-    public CustomerResponse patchCustomer(
-            Long id,
-            @Valid PatchCustomerRequest request) {
+    // @Transactional
+    // public CustomerResponse patchCustomer(
+    //         Long id,
+    //         @Valid PatchCustomerRequest request) {
 
-        CustomerEntity customer = customerRepository.findById(id)
-                .orElseThrow(() -> new CustomerNotFoundException());
+    //     CustomerEntity customer = customerRepository.findById(id)
+    //             .orElseThrow(() -> new CustomerNotFoundException());
 
-        if (request.getNik() != null) {
-            if (!customer.getNik().equals(request.getNik())
-                    && customerRepository.existsByNik(request.getNik())) {
-                throw new DuplicateException("NIK already exists");
-            }
-            customer.setNik(request.getNik());
-        }
+    //     if (request.getNik() != null) {
+    //         if (!customer.getNik().equals(request.getNik())
+    //                 && customerRepository.existsByNik(request.getNik())) {
+    //             throw new DuplicateException("NIK already exists");
+    //         }
+    //         customer.setNik(request.getNik());
+    //     }
 
-        if (request.getFullName() != null) {
-            customer.setFullName(request.getFullName());
-        }
+    //     if (request.getFullName() != null) {
+    //         customer.setFullName(request.getFullName());
+    //     }
 
-        if (request.getEmail() != null) {
-            if (!customer.getEmail().equals(request.getEmail())
-                    && customerRepository.existsByEmail(request.getEmail())) {
-                throw new IllegalArgumentException("Email already exists");
-            }
-            customer.setEmail(request.getEmail());
-        }
-        if (request.getPhoneNumber() != null) {
-            customer.setPhoneNumber(request.getPhoneNumber());
-        }
-        CustomerEntity updatedCustomer = customerRepository.save(customer);
+    //     if (request.getEmail() != null) {
+    //         if (!customer.getEmail().equals(request.getEmail())
+    //                 && customerRepository.existsByEmail(request.getEmail())) {
+    //             throw new IllegalArgumentException("Email already exists");
+    //         }
+    //         customer.setEmail(request.getEmail());
+    //     }
+    //     if (request.getPhoneNumber() != null) {
+    //         customer.setPhoneNumber(request.getPhoneNumber());
+    //     }
+    //     CustomerEntity updatedCustomer = customerRepository.save(customer);
 
-        log.info( "Customer data updated. customerId={}, email={}, phoneNumber={}",
-        customer.getId(),
-        customer.getEmail(),
-        customer.getPhoneNumber());
+    //     log.info( "Customer data updated. customerId={}, email={}, phoneNumber={}",
+    //     customer.getId(),
+    //     customer.getEmail(),
+    //     customer.getPhoneNumber());
 
-        return toResponse(updatedCustomer);
-    }
+    //     return toResponse(updatedCustomer);
+    // }
 
     // GET LOAN APP BY CUST ID
     @Transactional
