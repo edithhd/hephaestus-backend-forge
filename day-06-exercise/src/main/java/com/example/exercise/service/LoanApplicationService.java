@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +24,6 @@ import com.example.exercise.repository.LoanApplicationRepository;
 import com.example.exercise.repository.PaymentTransactionRepository;
 import com.example.exercise.repository.RepaymentScheduleRepository;
 
-import lombok.RequiredArgsConstructor;
 
 @Service
 @Transactional
@@ -33,6 +34,7 @@ public class LoanApplicationService {
     private final PaymentTransactionRepository paymentTransactionRepository;
     private final LoanApplicationRepository loanApplicationRepository;
     private final CustomerRepository customerRepository;
+    private static final Logger log = LoggerFactory.getLogger(LoanApplicationService.class);
 
     public LoanApplicationService(LoanApplicationRepository loanApplicationRepository, CustomerRepository customerRepository,
         RepaymentScheduleService repaymentScheduleService, PaymentTransactionRepository paymentTransactionRepository,
@@ -59,6 +61,10 @@ public class LoanApplicationService {
         loan.setUpdatedAt(ZonedDateTime.now());
 
         LoanApplicationEntity saved = loanApplicationRepository.save(loan);
+
+        log.info( "event=loan_application_submitted, loanApplicationId={}, status={}",
+        saved.getId(),
+        saved.getStatus());
 
         return toResponse(saved);
     }
@@ -103,12 +109,17 @@ public class LoanApplicationService {
     public LoanApplicationResponse approveLoanApplication(Long id) {
         LoanApplicationEntity loan = loanApplicationRepository.findById(id)
                 .orElseThrow(() -> new LoanApplicationNotFoundException(id));
+                log.warn("event=validation_error, field_error=id, error=not_found");
 
         loan.setStatus(LoanStatus.APPROVED);
         loan.setUpdatedAt(ZonedDateTime.now());
         LoanApplicationEntity updatedLoan = loanApplicationRepository.save(loan);
 
         repaymentScheduleService.createRepaymentSchedule(updatedLoan);
+
+        log.info( "event=loan_application_approved, loanApplicationId={}, status={}",
+        updatedLoan.getId(),
+        updatedLoan.getStatus());
 
         return toResponse(updatedLoan);
     }
@@ -117,9 +128,13 @@ public class LoanApplicationService {
     public LoanApplicationResponse rejectLoanApplication(Long id) {
         LoanApplicationEntity loan = loanApplicationRepository.findById(id)
                 .orElseThrow(() -> new LoanApplicationNotFoundException(id));
-
+                log.warn("event=validation_error, field_error=id, error=not_found");
         loan.setStatus(LoanStatus.REJECTED);
         loan.setUpdatedAt(ZonedDateTime.now());
+
+        log.info( "event=loan_application_approved, loanApplicationId={}, status={}",
+        loan.getId(),
+        loan.getStatus());
 
         return toResponse(loanApplicationRepository.save(loan));
     }

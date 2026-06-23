@@ -4,6 +4,9 @@ import com.example.exercise.repository.LoanApplicationRepository;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 // import org.springdoc.core.converters.models.SortAsQueryParam;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +33,7 @@ public class CustomerService {
 
     private final LoanApplicationRepository loanApplicationRepository;
     private final CustomerRepository customerRepository;
+    private static final Logger log = LoggerFactory.getLogger(CustomerService.class);
 
     CustomerService(LoanApplicationRepository loanApplicationRepository, CustomerRepository customerRepository) {
         this.loanApplicationRepository = loanApplicationRepository;
@@ -40,10 +44,12 @@ public class CustomerService {
     public CustomerResponse createCustomer(CreateCustomerRequest request) {
 
         if (customerRepository.existsByNik(request.getNik())) {
+            log.warn("event=validation_error, field_error=nik, error=duplicate");
             throw new DuplicateException("NIK already exists");
         }
 
         if (customerRepository.existsByEmail(request.getEmail())) {
+            log.warn("event=validation_error, field_error=email, error=duplicate");
             throw new DuplicateException("Email already exists");
         }
 
@@ -56,6 +62,10 @@ public class CustomerService {
         customer.setUpdatedAt(ZonedDateTime.now());
 
         CustomerEntity savedCustomer = customerRepository.save(customer);
+
+        log.info( "event=customer_created, customerId={}, fullName={}",
+        savedCustomer.getId(),
+        savedCustomer.getFullName());
 
         return toResponse(savedCustomer);
     }
@@ -102,8 +112,14 @@ public class CustomerService {
 
         CustomerEntity customer = customerRepository.findById(id)
                 .orElseThrow(() -> new CustomerNotFoundException());
-
+                log.warn("event=validation_error, field_error=email, error=duplicate");
         customerRepository.delete(customer);
+
+        log.info( "Customer deleted. customerId={}, fullName={}, email={}, phoneNumber={}",
+        customer.getId(),
+        customer.getFullName(),
+        customer.getEmail(),
+        customer.getPhoneNumber());
 
         return toResponse(customer);
     }
@@ -132,6 +148,10 @@ public class CustomerService {
         customer.setPhoneNumber(request.getPhoneNumber());
 
         CustomerEntity updatedCustomer = customerRepository.save(customer);
+
+        log.info( "Customer deleted. customerId={}, fullName={}",
+        customer.getId(),
+        customer.getFullName());
 
         return toResponse(updatedCustomer);
     }
@@ -167,6 +187,11 @@ public class CustomerService {
             customer.setPhoneNumber(request.getPhoneNumber());
         }
         CustomerEntity updatedCustomer = customerRepository.save(customer);
+
+        log.info( "Customer data updated. customerId={}, email={}, phoneNumber={}",
+        customer.getId(),
+        customer.getEmail(),
+        customer.getPhoneNumber());
 
         return toResponse(updatedCustomer);
     }
