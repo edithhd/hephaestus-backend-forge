@@ -4,12 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -22,12 +24,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.exercise.dto.CreateLoanApplicationRequest;
 import com.example.exercise.dto.LoanApplicationResponse;
+import com.example.exercise.dto.RepaymentScheduleResponse;
 import com.example.exercise.entity.CustomerEntity;
 import com.example.exercise.entity.LoanApplicationEntity;
+import com.example.exercise.entity.RepaymentScheduleEntity;
 import com.example.exercise.enums.LoanStatus;
+import com.example.exercise.enums.ScheduleStatus;
+import com.example.exercise.exception.CustomerNotFoundException;
 import com.example.exercise.exception.LoanApplicationNotFoundException;
 import com.example.exercise.repository.CustomerRepository;
 import com.example.exercise.repository.LoanApplicationRepository;
+import com.example.exercise.repository.RepaymentScheduleRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class LoanApplicationServiceTest {
@@ -37,11 +44,13 @@ public class LoanApplicationServiceTest {
     private CustomerRepository customerRepository;
     @Mock
     private RepaymentScheduleService repaymentScheduleService;
-
+    @Mock  
+    private RepaymentScheduleRepository repaymentScheduleRepository;
+    
     @InjectMocks
     private LoanApplicationService loanApplicationService;
     @InjectMocks
-    private CustomerService customerService;    
+    private CustomerService customerService;  
 
     @Test
     void should_create_loan_application_successfully() {
@@ -416,4 +425,125 @@ public class LoanApplicationServiceTest {
         assertNotNull(response.getCreatedAt());
         assertNotNull(response.getUpdatedAt());
     }
+
+    // get repayment schedules by loan id
+    @Test
+    void should_return_repayment_schedules_by_loan_application_id() {
+        Long loanId = 100L;
+        LoanApplicationEntity loan = new LoanApplicationEntity();
+        loan.setId(loanId);
+
+        RepaymentScheduleEntity schedule1 = new RepaymentScheduleEntity();
+        schedule1.setId(1L);
+        schedule1.setLoanApplication(loan);
+        schedule1.setInstallmentNumber(1);
+        schedule1.setDueDate(ZonedDateTime.now().plusMonths(1));
+        schedule1.setPrincipalAmount(BigDecimal.valueOf(1_000_000));
+        schedule1.setInterestAmount(BigDecimal.valueOf(100_000));
+        schedule1.setTotalAmount(BigDecimal.valueOf(1_100_000));
+        schedule1.setStatus(ScheduleStatus.UNPAID);
+        schedule1.setCreatedAt(ZonedDateTime.now());
+        schedule1.setUpdatedAt(ZonedDateTime.now());
+
+        RepaymentScheduleEntity schedule2 = new RepaymentScheduleEntity();
+        schedule2.setId(2L);
+        schedule2.setLoanApplication(loan);
+        schedule2.setInstallmentNumber(2);
+        schedule2.setDueDate(ZonedDateTime.now().plusMonths(2));
+        schedule2.setPrincipalAmount(BigDecimal.valueOf(1_000_000));
+        schedule2.setInterestAmount(BigDecimal.valueOf(100_000));
+        schedule2.setTotalAmount(BigDecimal.valueOf(1_100_000));
+        schedule2.setStatus(ScheduleStatus.UNPAID);
+        schedule2.setCreatedAt(ZonedDateTime.now());
+        schedule2.setUpdatedAt(ZonedDateTime.now());
+
+        when(loanApplicationRepository.existsById(loanId)).thenReturn(true);
+        when(repaymentScheduleRepository.findByLoanApplicationId(loanId)).thenReturn(List.of(schedule1, schedule2));
+
+        List<RepaymentScheduleResponse> responses = loanApplicationService.getRepaymentByLoanId(loanId);
+
+        assertNotNull(responses);
+        assertEquals(2, responses.size());
+        assertEquals(loanId, responses.get(0).getLoanApplicationId());
+        assertEquals(loanId, responses.get(1).getLoanApplicationId());
+        assertEquals(1, responses.get(0).getInstallmentNumber());
+        assertEquals(2, responses.get(1).getInstallmentNumber());
+
+        verify(loanApplicationRepository).existsById(loanId);
+        verify(repaymentScheduleRepository).findByLoanApplicationId(loanId);
+    }
+
+    // get repayment schedules by loan id (loan id not found)
+    @Test
+    void should_throw_exception_when_loan_application_not_found_for_repayment() {
+        Long loanId = 999L;
+
+        when(loanApplicationRepository.existsById(loanId)).thenReturn(false);
+        assertThrows(LoanApplicationNotFoundException.class,
+                () -> loanApplicationService.getRepaymentByLoanId(loanId));
+
+        verify(loanApplicationRepository).existsById(loanId);
+        verify(repaymentScheduleRepository, never())
+                .findByLoanApplicationId(anyLong());
+        }
+
+     // get loan app by cust id
+     @Test
+     void should_return_loan_applications_by_customer_id() {
+
+        Long customerId = 1L;
+
+        CustomerEntity customer = new CustomerEntity();
+        customer.setId(customerId);
+
+        LoanApplicationEntity loan1 = new LoanApplicationEntity();
+        loan1.setId(100L);
+        loan1.setCustomer(customer);
+        loan1.setLoanAmount(BigDecimal.valueOf(10_000_000));
+        loan1.setTenorMonth(12);
+        loan1.setPurpose("Home Renovation");
+        loan1.setStatus(LoanStatus.SUBMITTED);
+        loan1.setCreatedAt(ZonedDateTime.now());
+        loan1.setUpdatedAt(ZonedDateTime.now());
+
+        LoanApplicationEntity loan2 = new LoanApplicationEntity();
+        loan2.setId(101L);
+        loan2.setCustomer(customer);
+        loan2.setLoanAmount(BigDecimal.valueOf(5_000_000));
+        loan2.setTenorMonth(6);
+        loan2.setPurpose("Car Repair");
+        loan2.setStatus(LoanStatus.APPROVED);
+        loan2.setCreatedAt(ZonedDateTime.now());
+        loan2.setUpdatedAt(ZonedDateTime.now());
+
+        when(customerRepository.existsById(customerId)).thenReturn(true);
+        when(loanApplicationRepository.findLoansByCustomerId(customerId)).thenReturn(List.of(loan1, loan2));
+
+        List<LoanApplicationResponse> responses = loanApplicationService.getLoanApplicationsByCustomerId(customerId);
+
+        assertNotNull(responses);
+        assertEquals(2, responses.size());
+        assertEquals(100L, responses.get(0).getId());
+        assertEquals(101L, responses.get(1).getId());
+        assertEquals(LoanStatus.SUBMITTED, responses.get(0).getStatus());
+        assertEquals(LoanStatus.APPROVED, responses.get(1).getStatus());                
+        verify(customerRepository).existsById(customerId);
+        verify(loanApplicationRepository).findLoansByCustomerId(customerId);
+     }
+
+     // get loan app by cust id (cust id not found)
+     @Test
+        void should_throw_exception_when_customer_not_found() {
+
+        Long customerId = 999L;
+
+        when(customerRepository.existsById(customerId)).thenReturn(false);
+
+        assertThrows(CustomerNotFoundException.class,
+                () -> loanApplicationService.getLoanApplicationsByCustomerId(customerId)
+        );
+
+        verify(customerRepository).existsById(customerId);
+        verify(loanApplicationRepository, never()).findLoansByCustomerId(anyLong());
+     }
 }

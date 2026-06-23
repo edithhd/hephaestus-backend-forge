@@ -151,7 +151,7 @@ public class LoanApplicationService {
     @Transactional(readOnly = true)
     public List<LoanApplicationResponse> getLoanApplicationsByCustomerId(Long customerId) {
         if(!customerRepository.existsById(customerId)) {
-            throw new LoanApplicationNotFoundException(customerId);
+            throw new CustomerNotFoundException();
         }
 
         List<LoanApplicationEntity> loanApplication = loanApplicationRepository.findLoansByCustomerId(customerId);

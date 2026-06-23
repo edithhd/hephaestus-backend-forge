@@ -26,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.example.exercise.dto.CreateCustomerRequest;
 import com.example.exercise.dto.CustomerResponse;
 import com.example.exercise.dto.LoanApplicationResponse;
+import com.example.exercise.dto.UpdateCustomerRequest;
 import com.example.exercise.entity.CustomerEntity;
 import com.example.exercise.entity.LoanApplicationEntity;
 import com.example.exercise.exception.CustomerNotFoundException;
@@ -287,6 +288,155 @@ class CustomerServiceTest {
         // Repository loan should NEVER be called
         verify(loanApplicationRepository, never())
                 .findByCustomerId(anyLong());
+    }
+
+    // delete customer
+    @Test
+    void should_delete_customer() {
+
+        Long customerId = 1L;
+
+        CustomerEntity customer = new CustomerEntity();
+        customer.setId(customerId);
+        customer.setFullName("Test");
+        customer.setEmail("test@gmail.com");
+        customer.setPhoneNumber("081234567890");
+
+        when(customerRepository.findById(customerId))
+                .thenReturn(Optional.of(customer));
+
+        CustomerResponse response =
+                customerService.deleteCustomerById(customerId);
+
+        assertNotNull(response);
+        assertEquals(customerId, response.getId());
+        assertEquals("Test", response.getFullName());
+        assertEquals("test@gmail.com", response.getEmail());
+        assertEquals("081234567890", response.getPhoneNumber());
+
+        verify(customerRepository).findById(customerId);
+        verify(customerRepository).delete(customer);
+    }
+
+    // delete cust but cust not found
+    @Test
+    void should_throw_exception_when_delete_customer_not_found() {
+
+        Long customerId = 999L;
+        when(customerRepository.findById(customerId))
+                .thenReturn(Optional.empty());
+
+        assertThrows(CustomerNotFoundException.class,() -> customerService.deleteCustomerById(customerId));
+        verify(customerRepository).findById(customerId);
+        verify(customerRepository, never()).delete(any());
+    }
+
+    // update cust
+    @Test
+    void should_update_customer_data() {
+
+        Long customerId = 1L;
+
+        CustomerEntity customer = new CustomerEntity();
+        customer.setId(customerId);
+        customer.setNik("1234567890");
+        customer.setFullName("John Doe");
+        customer.setEmail("john@email.com");
+        customer.setPhoneNumber("081111111111");
+
+        UpdateCustomerRequest request = new UpdateCustomerRequest();
+        request.setNik("9876543210");
+        request.setFullName("John Updated");
+        request.setEmail("john.updated@email.com");
+        request.setPhoneNumber("082222222222");
+
+        when(customerRepository.findById(customerId))
+                .thenReturn(Optional.of(customer));
+
+        when(customerRepository.existsByEmail(request.getEmail()))
+                .thenReturn(false);
+
+        when(customerRepository.existsByNik(request.getNik()))
+                .thenReturn(false);
+
+        when(customerRepository.save(any(CustomerEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        CustomerResponse response =
+                customerService.updateCustomerById(customerId, request);
+
+        assertNotNull(response);
+        assertEquals(customerId, response.getId());
+        assertEquals("John Updated", response.getFullName());
+        assertEquals("john.updated@email.com", response.getEmail());
+        assertEquals("082222222222", response.getPhoneNumber());
+
+        verify(customerRepository).findById(customerId);
+        verify(customerRepository).save(any(CustomerEntity.class));
+    }
+
+    // update cust but not found
+    @Test
+    void should_throw_exception_when_updated_customer_not_found() {
+
+        Long customerId = 999L;
+        UpdateCustomerRequest request = new UpdateCustomerRequest();
+
+        when(customerRepository.findById(customerId)).thenReturn(Optional.empty());
+
+        assertThrows(CustomerNotFoundException.class,
+                () -> customerService.updateCustomerById(customerId, request));
+
+        verify(customerRepository).findById(customerId);
+        verify(customerRepository, never()).save(any());
+    }
+
+    // update cust but updated email is duplicate
+    @Test
+    void should_throw_exception_when_email_already_exists() {
+        Long customerId = 1L;
+
+        CustomerEntity customer = new CustomerEntity();
+        customer.setId(customerId);
+        customer.setEmail("old@email.com");
+        customer.setNik("1234567890");
+
+        UpdateCustomerRequest request = new UpdateCustomerRequest();
+        request.setEmail("new@email.com");
+        request.setNik("1234567890");
+
+        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
+        when(customerRepository.existsByEmail("new@email.com")).thenReturn(true);
+
+        DuplicateException exception = assertThrows(DuplicateException.class,
+                () -> customerService.updateCustomerById(customerId, request));
+
+        assertEquals("Email already exists", exception.getMessage());
+        verify(customerRepository, never()).save(any());
+        }
+
+    // update cust but updated nik is duplicate
+    @Test
+    void should_throw_exception_when_nik_already_exists() {
+        Long customerId = 1L;
+
+        CustomerEntity customer = new CustomerEntity();
+        customer.setId(customerId);
+        customer.setEmail("john@email.com");
+        customer.setNik("1234567890");
+
+        UpdateCustomerRequest request = new UpdateCustomerRequest();
+        request.setEmail("john@email.com");
+        request.setNik("9999999999");
+
+        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
+        when(customerRepository.existsByNik("9999999999")).thenReturn(true);
+
+        DuplicateException exception = assertThrows(DuplicateException.class,
+                () -> customerService.updateCustomerById(customerId, request));
+
+        assertEquals("NIK already exists", exception.getMessage());
+        verify(customerRepository, never()).save(any());
     }
 
 }
